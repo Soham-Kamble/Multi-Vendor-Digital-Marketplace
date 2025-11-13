@@ -150,9 +150,9 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-RAZOR_SECRET_KEY='Kjw1ZgPcYSgjF5Nx1JFtz4L5'
+RAZOR_SECRET_KEY=your_real_secret_key_here
 
-RAZOR_KEY_ID='rzp_test_RKIkeqiOm3VYK2'
+RAZOR_KEY_ID=your_real_key_id_here
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'index'
