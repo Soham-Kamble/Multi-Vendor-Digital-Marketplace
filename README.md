@@ -51,7 +51,7 @@ Includes Razorpay integration, sales analytics, product management, and a fully 
 | Frontend    | TailwindCSS, HTML, JS |
 | Charts      | Chart.js |
 | Payments    | Razorpay API |
-| Database    | SQLite / PostgreSQL |
+| Database    | PostgreSQL |
 | Auth        | Django Auth System |
 
 ---
@@ -60,8 +60,8 @@ Includes Razorpay integration, sales analytics, product management, and a fully 
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/digital-marketplace.git
-cd digital-marketplace
+git clone https://github.com/Soham-Kamble/Multi-Vendor-Digital-Marketplace
+cd DIGITAL MAKERTPLACE
 ```
 
 ### 2. Create Virtual Environment
