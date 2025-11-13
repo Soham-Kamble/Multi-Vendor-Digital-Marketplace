@@ -1,0 +1,104 @@
+# ============================
+# Django / Python
+# ============================
+
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Django specific
+db.sqlite3
+media/
+staticfiles/
+*.log
+
+
+#migrations
+*/migrations/
+!*/migrations/__init__.py
+
+# Local settings (if you keep secrets locally)
+*.local.py
+*.dev.py
+
+# ============================
+# Environment / Config
+# ============================
+
+# Environment variables
+.env
+.env.*  
+
+# Secret keys / API configs
+settings_secret.json
+settings_local.json
+
+# ============================
+# OS / Editor Files
+# ============================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VS Code / JetBrains
+.vscode/
+.idea/
+
+# ============================
+# Frontend / Tailwind
+# ============================
+
+# Node modules (if Tailwind used via npm)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Tailwind build output
+build/
+dist/
+
+# ============================
+# Backup / Dump Files
+# ============================
+
+backup.json
+full_backup.json
+full_backup_cleaned.json
+*.sql
+*.dump
+*.backup
+db_backup_*.json
+
+# ============================
+# Miscellaneous
+# ============================
+
+# Cache and temporary files
+*.tmp
+*.swp
+*.swo
+.cache/
+pytest_cache/
+.coverage
+htmlcov/
+
+# Uploaded receipts or files
+receipts/
+uploads/
+
+

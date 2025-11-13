@@ -1,0 +1,161 @@
+{% extends 'myapp/base.html' %}
+{% block body %}
+
+<!-- Sales Overview Section -->
+<section class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 px-6">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-gray-800 mb-2 tracking-tight">
+        💹 Sales <span class="text-emerald-600">Analytics</span>
+      </h1>
+      <p class="text-gray-500 text-sm sm:text-base">Track your performance and revenue growth</p>
+    </div>
+
+    <!-- Lifetime Revenue -->
+    <div class="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-100 shadow-md rounded-2xl p-10 text-center mb-12">
+      <div class="text-5xl font-extrabold text-emerald-600">$ {{ total_sales.amount__sum|default:'0' }}</div>
+      <div class="mt-3 text-gray-600 text-lg">Your Lifetime Revenue</div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-8 text-center transition">
+        <div class="text-3xl font-bold text-emerald-600">$ {{ yearly_sales.amount__sum|default:'0' }}</div>
+        <div class="mt-2 text-gray-500 text-sm">Last 365 Days</div>
+      </div>
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-8 text-center transition">
+        <div class="text-3xl font-bold text-emerald-600">$ {{ monthly_sales.amount__sum|default:'0' }}</div>
+        <div class="mt-2 text-gray-500 text-sm">Last 30 Days</div>
+      </div>
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-8 text-center transition">
+        <div class="text-3xl font-bold text-emerald-600">$ {{ weekly_sales.amount__sum|default:'0' }}</div>
+        <div class="mt-2 text-gray-500 text-sm">Last 7 Days</div>
+      </div>
+    </div>
+
+    <!-- Daily Sales Table + Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      
+      <!-- Daily Sales Table -->
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-6 overflow-x-auto transition">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          📅 30-Day Sales
+        </h2>
+        <div class="grid grid-cols-2 font-semibold text-gray-600 border-b pb-2 mb-2 min-w-[250px]">
+          <span>Date</span>
+          <span class="text-right">Total Sales</span>
+        </div>
+        {% for daily_sales_sum in daily_sales_sums %}
+        <div class="grid grid-cols-2 py-2 border-b border-gray-100 text-sm sm:text-base min-w-[250px]">
+          <span class="create-date">{{ daily_sales_sum.created_on__date }}</span>
+          <span class="day-sum font-bold text-emerald-600 text-right">${{ daily_sales_sum.sum }}</span>
+        </div>
+        {% empty %}
+        <div class="text-gray-400 py-4 text-center">No sales data for the past 30 days.</div>
+        {% endfor %}
+      </div>
+
+      <!-- Line Chart -->
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-4 sm:p-6 h-[350px] transition">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          📈 Revenue Trend
+        </h2>
+        <canvas id="myChart" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <!-- Product Sales Table + Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Bar Chart -->
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-4 sm:p-6 h-[400px] transition">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          🧾 Product Performance
+        </h2>
+        <canvas id="myChart1" class="w-full h-full"></canvas>
+      </div>
+
+      <!-- Product Sales Table -->
+      <div class="bg-white shadow-md hover:shadow-lg rounded-2xl p-6 overflow-x-auto transition">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          🛍️ Product Sales
+        </h2>
+        <div class="grid grid-cols-2 font-semibold text-gray-600 border-b pb-2 mb-2 min-w-[250px]">
+          <span>Product Name</span>
+          <span class="text-right">Total Sales</span>
+        </div>
+        {% for product_sales_sum in product_sales_sums %}
+        <div class="grid grid-cols-2 py-2 border-b border-gray-100 text-sm sm:text-base min-w-[250px]">
+          <span class="product-name break-words">{{ product_sales_sum.product__name }}</span>
+          <span class="product-sum font-bold text-emerald-600 text-right">${{ product_sales_sum.sum }}</span>
+        </div>
+        {% empty %}
+        <div class="text-gray-400 py-4 text-center">No product sales data.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Charts JS -->
+<script>
+  // Line Chart
+  const sums = Array.from(document.getElementsByClassName('day-sum')).map(el => parseInt(el.innerText.replace('$','')||0));
+  const dates = Array.from(document.getElementsByClassName('create-date')).map(el => el.innerText);
+  const ctx = document.getElementById('myChart').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, 'rgba(16,185,129,0.4)');
+  gradient.addColorStop(1, 'rgba(16,185,129,0)');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels: dates, datasets: [{
+      label: 'Sales (Last 30 Days)',
+      data: sums,
+      fill: true,
+      backgroundColor: gradient,
+      borderColor: '#10B981',
+      borderWidth: 3,
+      pointBackgroundColor: '#059669',
+      pointRadius: 4,
+      tension: 0.4
+    }]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
+    }
+  });
+
+  // Bar Chart
+  const product_names = Array.from(document.getElementsByClassName('product-name')).map(el => el.innerText);
+  const product_sums = Array.from(document.getElementsByClassName('product-sum')).map(el => parseInt(el.innerText.replace('$','')||0));
+  const ctx1 = document.getElementById('myChart1').getContext('2d');
+
+  new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: product_names,
+      datasets: [{
+        label: 'Product Sales',
+        data: product_sums,
+        backgroundColor: 'rgba(16,185,129,0.5)',
+        borderColor: '#10B981',
+        borderWidth: 2,
+        borderRadius: 6,
+        hoverBackgroundColor: '#059669'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
+    }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'myapp/base.html' %}
+{% block body %}
+
+<section class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 px-6">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
+        🛍️ My <span class="text-emerald-600">Purchases</span>
+      </h1>
+      <p class="text-gray-500 text-sm sm:text-base">Here are the products you’ve bought</p>
+    </div>
+
+    <!-- Purchases Table -->
+    <div class="bg-white shadow-md hover:shadow-lg rounded-2xl overflow-hidden border border-gray-100 transition">
+      <div class="overflow-x-auto">
+
+        <!-- Table Header -->
+        <div class="hidden sm:grid grid-cols-4 bg-emerald-50 p-4 font-semibold text-emerald-700 rounded-t-2xl text-sm sm:text-base min-w-[700px] border-b border-emerald-100">
+          <div>Product</div>
+          <div>Amount Paid</div>
+          <div>Order Date</div>
+          <div>Receipt</div>
+        </div>
+
+        <!-- Table Body -->
+        {% for order in orders %}
+        <div class="grid grid-cols-1 sm:grid-cols-4 border-b border-gray-100 hover:bg-gray-50 transition-colors p-4 items-center text-sm sm:text-base min-w-[700px]">
+          
+          <!-- Product (Image + Name) -->
+          <div class="flex items-center space-x-4">
+            {% if order.product.image %}
+              <img src="{{ order.product.image.url }}" 
+                   alt="{{ order.product.name }}" 
+                   class="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm">
+            {% else %}
+              <div class="w-16 h-16 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg border border-gray-200">📦</div>
+            {% endif %}
+            <span class="font-medium text-gray-800 break-words">{{ order.product.name }}</span>
+          </div>
+
+          <!-- Amount Paid -->
+          <div class="text-green-600 font-semibold">${{ order.amount }}</div>
+
+          <!-- Order Date -->
+          <div class="text-gray-600">{{ order.created_on|date:"M d, Y H:i" }}</div>
+
+          <!-- Download Button -->
+          <div>
+            {% if order.receipt %}
+              <a href="{{ order.receipt.url }}" download
+                 class="inline-block bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-4 py-1.5 rounded-md shadow-sm text-sm font-medium transition">
+                Download
+              </a>
+            {% else %}
+              <a href="{{ order.product.file.url }}" download
+                 class="inline-block bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-4 py-1.5 rounded-md shadow-sm text-sm font-medium transition">
+                Download
+              </a>
+            {% endif %}
+          </div>
+
+        </div>
+        {% empty %}
+        <div class="text-center text-gray-500 py-10 text-sm sm:text-base">
+          You haven’t made any purchases yet.
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'myapp/base.html' %}
+{% load widget_tweaks %}
+{% block body %}
+
+<section class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-6 flex justify-center items-start">
+  <div class="bg-white shadow-lg rounded-3xl w-full max-w-2xl p-8 sm:p-10 border border-gray-100 transition-all duration-300 hover:shadow-xl">
+    
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-800 mb-2">🛒 Add New Product</h1>
+      <p class="text-gray-500 text-sm">Fill out the details below to list your product</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+      {{ product_form.non_field_errors }}
+
+      <!-- Product Name -->
+      <div>
+        <label for="id_name" class="block text-sm font-semibold text-gray-700 mb-1">Product Name</label>
+        {{ product_form.name|add_class:"w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-emerald-400 outline-none transition" }}
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="id_description" class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+        {{ product_form.description|add_class:"w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-emerald-400 outline-none transition min-h-[120px]" }}
+      </div>
+
+      <!-- Price -->
+      <div>
+        <label for="id_price" class="block text-sm font-semibold text-gray-700 mb-1">Price (₹)</label>
+        {{ product_form.price|add_class:"w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-emerald-400 outline-none transition" }}
+      </div>
+
+      <!-- Image Upload -->
+      <div>
+        <label for="id_image" class="block text-sm font-semibold text-gray-700 mb-2">Product Image</label>
+        <div class="border-2 border-dashed border-gray-300 hover:border-emerald-400 rounded-lg p-4 bg-gray-50 transition">
+          {{ product_form.image|add_class:"block w-full text-sm text-gray-600 cursor-pointer" }}
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Accepted formats: JPG, PNG. Max size 5MB.</p>
+
+        <!-- Image Preview -->
+        <div class="mt-4 flex justify-center">
+          <img id="image-preview" class="hidden rounded-lg shadow-md w-40 h-40 object-cover border border-gray-200" alt="Preview" />
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-end gap-4 pt-4 border-t border-gray-100">
+        <button type="reset" 
+                class="px-5 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition font-medium">
+          Clear
+        </button>
+        <button type="submit"
+                class="px-6 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-md transition">
+          Add Product
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- Image Preview Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const imageInput = document.querySelector('input[name="image"]');
+  const preview = document.getElementById('image-preview');
+
+  if (imageInput) {
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) {
+        preview.src = '';
+        preview.classList.add('hidden');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        preview.src = ev.target.result;
+        preview.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+});
+</script>
+
+{% endblock %}

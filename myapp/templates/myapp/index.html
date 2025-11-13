@@ -1,0 +1,91 @@
+{% extends 'myapp/base.html' %}
+{% block body %}
+
+<!-- Page Wrapper -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+  <!-- Page Title -->
+  <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-10 tracking-tight">
+    Explore Our <span class="text-emerald-600">Digital Products</span>
+  </h1>
+
+  <!-- Product Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+    {% for product in page_obj %}
+      <div class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group">
+        
+        <!-- Product Image -->
+        {% if product.image %}
+          <div class="overflow-hidden rounded-t-2xl">
+            <img src="{{ product.image.url }}" 
+                 alt="{{ product.name }}" 
+                 class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
+          </div>
+        {% else %}
+          <div class="bg-gray-100 flex items-center justify-center h-56 text-gray-500">
+            No Image Available
+          </div>
+        {% endif %}
+
+        <!-- Product Info -->
+        <div class="p-6 flex flex-col justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-1 group-hover:text-emerald-600 transition-colors">
+              {{ product.name }}
+            </h2>
+            <p class="text-gray-600 text-sm leading-relaxed mb-3">
+              {{ product.description|truncatewords:15 }}
+            </p>
+          </div>
+
+          <div class="mt-auto flex items-center justify-between">
+            <p class="text-emerald-600 font-bold text-lg">${{ product.price }}</p>
+            
+            <!-- View Details Button -->
+            <a href="{% url 'detail' product.id %}" 
+               class="text-white bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 
+                      px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition">
+              View Details
+            </a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center text-gray-500 col-span-full py-10">No products available.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div class="flex justify-center mt-12">
+    <nav class="inline-flex space-x-2 text-sm">
+      
+      {% if page_obj.has_previous %}
+        <a href="?page=1" class="px-3 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition">&laquo;</a>
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition">Previous</a>
+      {% else %}
+        <span class="px-3 py-2 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed">&laquo;</span>
+        <span class="px-3 py-2 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed">Previous</span>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <span class="px-3 py-2 rounded-md bg-emerald-600 text-white font-semibold shadow">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?page={{ num }}" class="px-3 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}" class="px-3 py-2 rounded-md bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 transition">&raquo;</a>
+      {% else %}
+        <span class="px-3 py-2 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed">Next</span>
+        <span class="px-3 py-2 rounded-md bg-gray-50 text-gray-400 cursor-not-allowed">&raquo;</span>
+      {% endif %}
+    </nav>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
