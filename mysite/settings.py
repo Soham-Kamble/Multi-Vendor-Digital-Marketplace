@@ -6,11 +6,13 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load environment variables
-load_dotenv(BASE_DIR / ".env")
+# Load environment variables from .env only in development
+if not os.environ.get("RENDER"):  # RENDER env var is set by Render platform
+    load_dotenv(BASE_DIR / ".env")
 
 env = environ.Env()
-environ.Env.read_env(BASE_DIR / '.env')
+if not os.environ.get("RENDER"):
+    environ.Env.read_env(BASE_DIR / '.env')
 
 # --- Security ---
 SECRET_KEY = env('DJANGO_SECRET_KEY')
@@ -68,15 +70,14 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
+        conn_max_age=600
     )
 }
 
-# Force SSL options for psycopg3 + Render
-DATABASES["default"]["OPTIONS"] = {
-    "sslmode": "require"
-}
+# Only set sslmode if not already in the URL
+if "sslmode" not in DATABASES["default"].get("OPTIONS", {}):
+    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+
 
 
 # --- Password Validators ---
