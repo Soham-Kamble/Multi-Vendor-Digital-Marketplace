@@ -16,17 +16,11 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from django.template.loader import render_to_string
-from django.core.files.base import ContentFile
-from django.template.loader import render_to_string
-from django.core.files.base import ContentFile
 from django.core.paginator import Paginator
 from django.contrib import messages
 
 def generate_receipt(order):
-    from io import BytesIO
-    from django.core.files.base import ContentFile
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.utils import ImageReader
+    
 
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=(400, 600))
