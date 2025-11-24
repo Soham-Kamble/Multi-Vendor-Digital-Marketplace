@@ -74,13 +74,13 @@ DATABASES = {
     )
 }
 
-# Configure SSL for PostgreSQL
+# Configure SSL for PostgreSQL - use sslmode=allow to work around Render SSL issues
 if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
     if "OPTIONS" not in DATABASES["default"]:
         DATABASES["default"]["OPTIONS"] = {}
-    # Use sslmode=require with certificate verification disabled (safe for Render managed DB)
-    DATABASES["default"]["OPTIONS"]["sslmode"] = "require"
-    DATABASES["default"]["OPTIONS"]["sslcert"] = None
+    # Allow SSL but don't require it; disable cert verification for Render managed DB
+    DATABASES["default"]["OPTIONS"]["sslmode"] = "allow"
+    DATABASES["default"]["OPTIONS"].pop("sslcert", None)  # Remove cert requirement if present
 
 
 
