@@ -74,9 +74,13 @@ DATABASES = {
     )
 }
 
-# Only set sslmode if not already in the URL
-if "sslmode" not in DATABASES["default"].get("OPTIONS", {}):
-    DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
+# Configure SSL for PostgreSQL
+if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
+    if "OPTIONS" not in DATABASES["default"]:
+        DATABASES["default"]["OPTIONS"] = {}
+    # Use sslmode=require with certificate verification disabled (safe for Render managed DB)
+    DATABASES["default"]["OPTIONS"]["sslmode"] = "require"
+    DATABASES["default"]["OPTIONS"]["sslcert"] = None
 
 
 
