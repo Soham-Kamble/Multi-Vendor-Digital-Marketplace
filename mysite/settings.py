@@ -78,9 +78,8 @@ DATABASES = {
 if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
     if "OPTIONS" not in DATABASES["default"]:
         DATABASES["default"]["OPTIONS"] = {}
-    # Use sslmode=require and disable strict certificate verification
-    DATABASES["default"]["OPTIONS"]["sslmode"] = "require"
-    DATABASES["default"]["OPTIONS"]["sslcertmode"] = "disable"
+    # Use prefer to try SSL but fall back if it fails
+    DATABASES["default"]["OPTIONS"]["sslmode"] = "prefer"
 
 
 
