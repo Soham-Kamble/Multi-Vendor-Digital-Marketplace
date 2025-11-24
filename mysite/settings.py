@@ -78,13 +78,9 @@ DATABASES = {
 if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
     if "OPTIONS" not in DATABASES["default"]:
         DATABASES["default"]["OPTIONS"] = {}
-    # Force SSL with proper psycopg3 configuration
+    # Use sslmode=require and disable strict certificate verification
     DATABASES["default"]["OPTIONS"]["sslmode"] = "require"
-    # Disable certificate verification for Render managed DB
-    DATABASES["default"]["OPTIONS"]["ssl"] = {
-        "check_hostname": False,
-        "verify_mode": "none"
-    }
+    DATABASES["default"]["OPTIONS"]["sslcertmode"] = "disable"
 
 
 
