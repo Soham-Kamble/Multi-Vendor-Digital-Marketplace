@@ -73,6 +73,12 @@ DATABASES = {
     )
 }
 
+# Force SSL options for psycopg3 + Render
+DATABASES["default"]["OPTIONS"] = {
+    "sslmode": "require"
+}
+
+
 # --- Password Validators ---
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
