@@ -159,9 +159,15 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+<<<<<<< HEAD
 RAZOR_SECRET_KEY = env('RAZOR_SECRET_KEY')
 
 RAZOR_KEY_ID = env('RAZOR_KEY_ID')
+=======
+RAZOR_SECRET_KEY=your_real_secret_key_here
+
+RAZOR_KEY_ID=your_real_key_id_here
+>>>>>>> ab19961db94111114e7faeefaa1600bc6935b797
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = 'index'
