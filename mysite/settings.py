@@ -70,18 +70,10 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     "default": dj_database_url.config(
         default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600
+        conn_max_age=600,
+        ssl_require=True  # ← required for Render PostgreSQL
     )
 }
-
-# Configure SSL for PostgreSQL with psycopg3
-if DATABASES["default"].get("ENGINE") == "django.db.backends.postgresql":
-    if "OPTIONS" not in DATABASES["default"]:
-        DATABASES["default"]["OPTIONS"] = {}
-    # Use prefer to try SSL but fall back if it fails
-    DATABASES["default"]["OPTIONS"]["sslmode"] = "prefer"
-
-
 
 # --- Password Validators ---
 AUTH_PASSWORD_VALIDATORS = [
