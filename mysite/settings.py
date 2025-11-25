@@ -3,8 +3,13 @@ import os
 import dj_database_url
 import logging
 import sys
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env locally (Render sets its own env vars)
+if os.environ.get("RENDER") != "1":
+    load_dotenv(BASE_DIR / ".env")
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
