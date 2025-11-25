@@ -13,6 +13,8 @@ ALLOWED_HOSTS = ["*"]
 
 # APPS
 INSTALLED_APPS = [
+    'cloudinary',
+    'cloudinary_storage',
     "widget_tweaks",
     "myapp",
     "django.contrib.admin",
@@ -54,63 +56,69 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "mysite.wsgi.application"
 
+# ---------------------------
 # DATABASE
-DATABASES = {
-    "default": dj_database_url.config(
-        default=None,
-        conn_max_age=600,
-        ssl_require=True
-    )
+# ---------------------------
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("DB_NAME"),
+            "USER": os.environ.get("DB_USER"),
+            "PASSWORD": os.environ.get("DB_PASSWORD"),
+            "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+            "PORT": os.environ.get("DB_PORT", "5432"),
+        }
+    }
+
+# ---------------------------
+# CLOUDINARY MEDIA SETTINGS
+# ---------------------------
+
+MEDIA_URL = "/media/"
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY': os.environ.get("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.environ.get("CLOUDINARY_API_SECRET"),
 }
 
-# PASSWORDS
-AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-]
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# INTL
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_TZ = True
+# ---------------------------
 
-# STATIC
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# MEDIA
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# RAZORPAY
+# Razorpay
 RAZOR_SECRET_KEY = os.environ.get("RAZOR_SECRET_KEY")
 RAZOR_KEY_ID = os.environ.get("RAZOR_KEY_ID")
 
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "index"
 
-import logging
-import sys
-
+# Logging
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "stream": sys.stdout,
-        }
+        "console": {"class": "logging.StreamHandler", "stream": sys.stdout}
     },
     "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "ERROR",
-        }
+        "django": {"handlers": ["console"], "level": "ERROR"},
     },
 }
