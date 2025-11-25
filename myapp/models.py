@@ -11,7 +11,7 @@ class Product(models.Model):
     
     total_sales_amount = models.IntegerField(default=0)
     total_sales = models.IntegerField(default=0)
-    image = models.ImageField(upload_to='products/', null=True, blank=True)
+    image = CloudinaryField('image', blank=True, null=True, folder='products')
     
     def __str__(self):
         return self.name
