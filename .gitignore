@@ -21,9 +21,9 @@ staticfiles/
 *.log
 
 
-#migrations
-*/migrations/
-!*/migrations/__init__.py
+# Ignore migration cache files, BUT keep real migrations
+*/migrations/*.pyc
+
 
 # Local settings (if you keep secrets locally)
 *.local.py
