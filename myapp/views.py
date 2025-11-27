@@ -20,38 +20,51 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 
 def generate_receipt(order):
-    
-
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=(400, 600))
-    
+
+    # Header
     p.setFont("Helvetica-Bold", 16)
     p.drawString(50, 550, "Purchase Receipt")
 
+    # Basic info
     p.setFont("Helvetica", 12)
     p.drawString(50, 520, f"Product: {order.product.name}")
     p.drawString(50, 500, f"Price Paid: ${order.amount}")
     p.drawString(50, 480, f"Purchased by: {order.customer_email}")
-    # Optional: buyer name if you store it in OrderDetail
-    if hasattr(order, 'customer_name'):
+
+    if hasattr(order, "customer_name"):
         p.drawString(50, 460, f"Name: {order.customer_name}")
+
     p.drawString(50, 440, f"Date: {order.created_on.strftime('%Y-%m-%d %H:%M')}")
 
-    # Draw product image
+    # ---------- FIXED IMAGE HANDLING ----------
     if order.product.image:
         try:
-            img = ImageReader(order.product.image)
-            p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True, mask='auto')
+            # Cloudinary images are URLs → download them first
+            response = requests.get(order.product.image.url, stream=True)
+            response.raise_for_status()
+
+            img_data = BytesIO(response.content)
+            img = ImageReader(img_data)
+
+            p.drawImage(img, 50, 250, width=300, height=150,
+                        preserveAspectRatio=True, mask='auto')
+
         except Exception as e:
             print("Error adding product image:", e)
 
+    # Finalize PDF
     p.showPage()
     p.save()
     buffer.seek(0)
 
-    file_name = f"receipt_{order.id}.pdf"
-    order.receipt.save(file_name, ContentFile(buffer.read()))
-    order.save()
+    # Save to Cloudinary using Django storage
+    order.receipt.save(
+        f"receipt_{order.id}.pdf",
+        ContentFile(buffer.read()),
+        save=True
+    )
 
 
 
