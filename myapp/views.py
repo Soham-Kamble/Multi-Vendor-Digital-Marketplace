@@ -19,52 +19,64 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from django.contrib import messages
 
+# required imports at top of the file
+import requests
+from io import BytesIO
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+
 def generate_receipt(order):
     buffer = BytesIO()
     p = canvas.Canvas(buffer, pagesize=(400, 600))
 
-    # Header
+    # Header + info
     p.setFont("Helvetica-Bold", 16)
     p.drawString(50, 550, "Purchase Receipt")
 
-    # Basic info
     p.setFont("Helvetica", 12)
     p.drawString(50, 520, f"Product: {order.product.name}")
     p.drawString(50, 500, f"Price Paid: ${order.amount}")
     p.drawString(50, 480, f"Purchased by: {order.customer_email}")
-
     if hasattr(order, "customer_name"):
         p.drawString(50, 460, f"Name: {order.customer_name}")
-
     p.drawString(50, 440, f"Date: {order.created_on.strftime('%Y-%m-%d %H:%M')}")
 
-    # ---------- FIXED IMAGE HANDLING ----------
-    if order.product.image:
+    # Add product image if available (download first)
+    if getattr(order.product, "image", None):
         try:
-            # Cloudinary images are URLs → download them first
-            response = requests.get(order.product.image.url, stream=True)
-            response.raise_for_status()
-
-            img_data = BytesIO(response.content)
-            img = ImageReader(img_data)
-
-            p.drawImage(img, 50, 250, width=300, height=150,
-                        preserveAspectRatio=True, mask='auto')
-
+            img_url = order.product.image.url
+            resp = requests.get(img_url, timeout=10)
+            resp.raise_for_status()
+            img_io = BytesIO(resp.content)
+            img = ImageReader(img_io)
+            p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True, mask='auto')
         except Exception as e:
-            print("Error adding product image:", e)
+            # don't fail PDF generation if image fails; just log
+            print("generate_receipt: could not add product image:", e)
 
-    # Finalize PDF
+    # finish PDF
     p.showPage()
     p.save()
     buffer.seek(0)
 
-    # Save to Cloudinary using Django storage
-    order.receipt.save(
-        f"receipt_{order.id}.pdf",
-        ContentFile(buffer.read()),
-        save=True
-    )
+    # Save PDF via default_storage (this works with cloudinary_storage)
+    file_name = f"receipts/receipt_{order.id}.pdf"       # path/name in storage
+    content = ContentFile(buffer.read())
+
+    # If file exists, remove it first (optional)
+    try:
+        if default_storage.exists(file_name):
+            default_storage.delete(file_name)
+    except Exception:
+        pass
+
+    saved_path = default_storage.save(file_name, content)   # returns path/name in storage
+    # assign to FileField properly
+    order.receipt.name = saved_path
+    order.save()
+    buffer.close()
 
 
 
