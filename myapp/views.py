@@ -43,41 +43,29 @@ def generate_receipt(order):
         p.drawString(50, 460, f"Name: {order.customer_name}")
     p.drawString(50, 440, f"Date: {order.created_on.strftime('%Y-%m-%d %H:%M')}")
 
-    # Add product image if available (download first)
-    if getattr(order.product, "image", None):
+    # Product image
+    if order.product.image:
         try:
             img_url = order.product.image.url
             resp = requests.get(img_url, timeout=10)
             resp.raise_for_status()
-            img_io = BytesIO(resp.content)
-            img = ImageReader(img_io)
-            p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True, mask='auto')
+            img = ImageReader(BytesIO(resp.content))
+            p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True)
         except Exception as e:
-            # don't fail PDF generation if image fails; just log
-            print("generate_receipt: could not add product image:", e)
+            print("Product image error:", e)
 
-    # finish PDF
     p.showPage()
     p.save()
     buffer.seek(0)
 
-    # Save PDF via default_storage (this works with cloudinary_storage)
-    file_name = f"receipts/receipt_{order.id}.pdf"       # path/name in storage
-    content = ContentFile(buffer.read())
+    # ✅ Save PDF to Cloudinary (ONLY this!)
+    order.receipt.save(
+        f"receipt_{order.id}.pdf",
+        ContentFile(buffer.read()),
+        save=True
+    )
 
-    # If file exists, remove it first (optional)
-    try:
-        if default_storage.exists(file_name):
-            default_storage.delete(file_name)
-    except Exception:
-        pass
-
-    saved_path = default_storage.save(file_name, content)   # returns path/name in storage
-    # assign to FileField properly
-    order.receipt.name = saved_path
-    order.save()
     buffer.close()
-
 
 
 def index(request):
