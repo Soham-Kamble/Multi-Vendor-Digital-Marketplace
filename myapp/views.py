@@ -66,6 +66,9 @@ def generate_receipt(order):
     )
 
     buffer.close()
+    print("Receipt saved as:", order.receipt.name)
+    print("Receipt URL:", getattr(order.receipt, "url", None))
+
 
 
 def index(request):
