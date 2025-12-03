@@ -18,14 +18,9 @@ from reportlab.lib.utils import ImageReader
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from django.contrib import messages
-
-# required imports at top of the file
-import requests
-from io import BytesIO
-from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
+import requests
+
 
 def generate_receipt(order):
     buffer = BytesIO()
@@ -68,7 +63,7 @@ def generate_receipt(order):
     buffer.close()
     print("Receipt saved as:", order.receipt.name)
     print("Receipt URL:", getattr(order.receipt, "url", None))
-
+    print("CURRENT STORAGE:", default_storage.__class__)
 
 
 def index(request):
