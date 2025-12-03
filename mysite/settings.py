@@ -1,20 +1,35 @@
 from pathlib import Path
 import os
-import dj_database_url
-import logging
 import sys
+import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env locally (Render sets its own env vars)
+# Load .env locally
 if os.environ.get("RENDER") != "1":
     load_dotenv(BASE_DIR / ".env")
+
+# -------------------------
+# CLOUDINARY MUST LOAD FIRST
+# -------------------------
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    'API_KEY': os.environ.get("CLOUDINARY_API_KEY"),
+    'API_SECRET': os.environ.get("CLOUDINARY_API_SECRET"),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = ""
+
+print("CLOUDINARY SETTINGS:", CLOUDINARY_STORAGE)
+print("STORAGE BACKEND:", DEFAULT_FILE_STORAGE)
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 ALLOWED_HOSTS = ["*"]
+
 
 # APPS
 INSTALLED_APPS = [
@@ -127,3 +142,6 @@ LOGGING = {
         "django": {"handlers": ["console"], "level": "ERROR"},
     },
 }
+
+print("CLOUDINARY LOADED:", CLOUDINARY_STORAGE)
+print("STORAGE BACKEND:", DEFAULT_FILE_STORAGE)
