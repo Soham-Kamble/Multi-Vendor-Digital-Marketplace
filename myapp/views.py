@@ -34,15 +34,13 @@ def generate_receipt(order):
     p.drawString(50, 520, f"Product: {order.product.name}")
     p.drawString(50, 500, f"Price Paid: ${order.amount}")
     p.drawString(50, 480, f"Purchased by: {order.customer_email}")
-    if hasattr(order, "customer_name"):
-        p.drawString(50, 460, f"Name: {order.customer_name}")
     p.drawString(50, 440, f"Date: {order.created_on.strftime('%Y-%m-%d %H:%M')}")
 
-    # Product image
+    # Add product image if available
     if order.product.image:
         try:
             img_url = order.product.image.url
-            resp = requests.get(img_url, timeout=10)
+            resp = requests.get(img_url)
             resp.raise_for_status()
             img = ImageReader(BytesIO(resp.content))
             p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True)
@@ -53,7 +51,7 @@ def generate_receipt(order):
     p.save()
     buffer.seek(0)
 
-    # ✅ Save PDF to Cloudinary (ONLY this!)
+    # 🔥 Correct: save ONLY to Cloudinary
     order.receipt.save(
         f"receipt_{order.id}.pdf",
         ContentFile(buffer.read()),
@@ -61,9 +59,6 @@ def generate_receipt(order):
     )
 
     buffer.close()
-    print("Receipt saved as:", order.receipt.name)
-    print("Receipt URL:", getattr(order.receipt, "url", None))
-    print("CURRENT STORAGE:", default_storage.__class__)
 
 
 def index(request):
