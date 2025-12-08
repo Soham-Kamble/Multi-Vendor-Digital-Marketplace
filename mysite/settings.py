@@ -6,34 +6,40 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env only locally
+# Load local .env only (Render provides env automatically)
 if os.environ.get("RENDER") != "1":
     load_dotenv(BASE_DIR / ".env")
 
 # ---------------------------
-# CLOUDINARY SETTINGS
+# CLOUDINARY CONFIG (TOP OF FILE)
 # ---------------------------
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get("CLOUDINARY_CLOUD_NAME"),
-    'API_KEY': os.environ.get("CLOUDINARY_API_KEY"),
-    'API_SECRET': os.environ.get("CLOUDINARY_API_SECRET"),
+    "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
 }
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# IMPORTANT: keep MEDIA_URL non-empty
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+print(">>> USING STORAGE:", DEFAULT_FILE_STORAGE)
+print(">>> CLOUDINARY:", CLOUDINARY_STORAGE)
+
+# ---------------------------
 # SECURITY
+# ---------------------------
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 ALLOWED_HOSTS = ["*"]
 
+# ---------------------------
 # APPS
+# ---------------------------
 INSTALLED_APPS = [
-    'cloudinary',
-    'cloudinary_storage',
+    "cloudinary",
+    "cloudinary_storage",
     "widget_tweaks",
     "myapp",
     "django.contrib.admin",
@@ -44,7 +50,9 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 ]
 
+# ---------------------------
 # MIDDLEWARE
+# ---------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -85,7 +93,7 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=True,
         )
     }
 else:
@@ -100,28 +108,26 @@ else:
         }
     }
 
-# STATIC FILES
+# ---------------------------
+# STATIC
+# ---------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# ---------------------------
+# MISC
+# ---------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# Razorpay
 RAZOR_SECRET_KEY = os.environ.get("RAZOR_SECRET_KEY")
 RAZOR_KEY_ID = os.environ.get("RAZOR_KEY_ID")
-
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "index"
 
-# Logging
+# Logs
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "console": {"class": "logging.StreamHandler", "stream": sys.stdout}
-    },
-    "loggers": {
-        "django": {"handlers": ["console"], "level": "ERROR"},
-    },
+    "handlers": {"console": {"class": "logging.StreamHandler", "stream": sys.stdout}},
+    "loggers": {"django": {"handlers": ["console"], "level": "ERROR"}},
 }
