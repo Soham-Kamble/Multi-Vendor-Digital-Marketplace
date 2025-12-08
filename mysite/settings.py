@@ -11,7 +11,7 @@ if os.environ.get("RENDER") != "1":
     load_dotenv(BASE_DIR / ".env")
 
 # ---------------------------
-# CLOUDINARY CONFIG (TOP OF FILE)
+# CLOUDINARY CONFIG (TOP)
 # ---------------------------
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
@@ -21,8 +21,10 @@ CLOUDINARY_STORAGE = {
 
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
+# IMPORTANT: REMOVE MEDIA_URL and MEDIA_ROOT
+MEDIA_URL = ""
+MEDIA_ROOT = ""
+
 
 print(">>> USING STORAGE:", DEFAULT_FILE_STORAGE)
 print(">>> CLOUDINARY:", CLOUDINARY_STORAGE)

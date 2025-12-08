@@ -24,6 +24,3 @@ urlpatterns = [
     path('sales/',views.sales,name='sales'),
     path("payment-handler/", views.payment_handler, name="payment_handler"),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
