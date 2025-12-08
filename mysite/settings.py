@@ -20,7 +20,10 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-MEDIA_URL = ""
+
+# IMPORTANT: keep MEDIA_URL non-empty
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -53,9 +56,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# ---------------------------
-# FIXED — THIS MUST EXIST
-# ---------------------------
 ROOT_URLCONF = "mysite.urls"
 
 TEMPLATES = [
@@ -78,7 +78,6 @@ WSGI_APPLICATION = "mysite.wsgi.application"
 # ---------------------------
 # DATABASE
 # ---------------------------
-
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
@@ -101,9 +100,7 @@ else:
         }
     }
 
-# ---------------------------
 # STATIC FILES
-# ---------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
