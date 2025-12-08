@@ -31,7 +31,12 @@ class OrderDetail(models.Model):
     has_paid = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now_add=True)
-    receipt = models.FileField(upload_to='receipts/', null=True, blank=True)
+    receipt = CloudinaryField(
+        resource_type='raw',        # for PDFs
+        folder='receipts',          # Cloudinary folder name
+        null=True,
+        blank=True
+    )
 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="PENDING")  
     razor_order_id = models.CharField(max_length=200, null=True, blank=True)
