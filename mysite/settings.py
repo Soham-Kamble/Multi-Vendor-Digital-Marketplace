@@ -11,7 +11,7 @@ if os.environ.get("RENDER") != "1":
     load_dotenv(BASE_DIR / ".env")
 
 # ---------------------------
-# CLOUDINARY CONFIG (TOP)
+# CLOUDINARY CONFIG
 # ---------------------------
 CLOUDINARY_STORAGE = {
     "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
@@ -21,9 +21,12 @@ CLOUDINARY_STORAGE = {
 
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-# IMPORTANT: REMOVE MEDIA_URL and MEDIA_ROOT
+# IMPORTANT: do NOT set MEDIA_ROOT
+MEDIA_ROOT = None
+
+# IMPORTANT: do NOT use /media/ path (Cloudinary doesn't use Django URLs)
 MEDIA_URL = ""
-MEDIA_ROOT = ""
+
 
 
 print(">>> USING STORAGE:", DEFAULT_FILE_STORAGE)
