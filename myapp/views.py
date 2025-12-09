@@ -21,6 +21,9 @@ from django.contrib import messages
 from django.core.files.storage import default_storage
 import requests
 
+from django.core.files.storage import default_storage
+print(">>> ACTIVE STORAGE ON RENDER:", default_storage.__class__)
+
 
 def generate_receipt(order):
     buffer = BytesIO()

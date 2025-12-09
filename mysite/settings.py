@@ -20,17 +20,9 @@ CLOUDINARY_STORAGE = {
 }
 
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
-# IMPORTANT: do NOT set MEDIA_ROOT
+MEDIA_URL = ""
 MEDIA_ROOT = None
 
-# IMPORTANT: do NOT use /media/ path (Cloudinary doesn't use Django URLs)
-MEDIA_URL = ""
-
-
-
-print(">>> USING STORAGE:", DEFAULT_FILE_STORAGE)
-print(">>> CLOUDINARY:", CLOUDINARY_STORAGE)
 
 # ---------------------------
 # SECURITY
