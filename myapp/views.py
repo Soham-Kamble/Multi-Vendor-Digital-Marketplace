@@ -122,67 +122,58 @@ def verify_payment(request):
         data = json.loads(request.body)
         client = razorpay.Client(auth=(settings.RAZOR_KEY_ID, settings.RAZOR_SECRET_KEY))
 
-        # Verify payment signature
+        # 1) verify signature
         client.utility.verify_payment_signature({
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
             'razorpay_signature': data['razorpay_signature']
         })
 
-        # Mark order as PAID
+        # 2) find order (search by razor_order_id)
         order = get_object_or_404(OrderDetail, razor_order_id=data['razorpay_order_id'])
+
+        # 3) save payment id and mark PAID
         order.razor_payment_id = data['razorpay_payment_id']
         order.status = "PAID"
         order.has_paid = True
         order.save()
 
-        # Update product totals
+        # 4) update product totals
         product = order.product
         product.total_sales_amount += int(order.amount)
         product.total_sales += 1
         product.save()
 
-        # Generate receipt if not already present
+        # 5) generate receipt (if not present)
         if not order.receipt:
             try:
                 generate_receipt(order)
             except Exception as e:
                 traceback.print_exc()
-                print(f"⚠️ Receipt generation failed: {e}")
-                # Don't fail payment if receipt fails - customer still paid
+                return JsonResponse({"status": "Receipt generation failed", "error": str(e)}, status=500)
 
-
-        # ✅ RETURN ORDER ID so success page knows the exact order
         return JsonResponse({
             "status": "Payment Verified",
             "order_id": order.id,
-            "razorpay_order_id": order.razor_payment_id,
-        }, status=200)
+            "razorpay_order_id": order.razor_order_id,
+        })
 
     except razorpay.errors.SignatureVerificationError as e:
-        print(f"❌ Signature verification failed: {e}")
-        # Mark order as FAILED using razor_order_id from request (if available)
+        # mark failed
         try:
-            razor_order_id = data.get('razorpay_order_id')
-            if razor_order_id:
-                order = OrderDetail.objects.get(razor_order_id=razor_order_id)
-                order.status = "FAILED"
-                order.save()
-        except Exception:
+            o = OrderDetail.objects.filter(razor_order_id=data.get('razorpay_order_id')).first()
+            if o:
+                o.status = "FAILED"
+                o.save()
+        except:
             pass
+        traceback.print_exc()
+        return JsonResponse({"status": "Payment Verification Failed", "error": str(e)}, status=400)
 
-        traceback.print_exc()
-        return JsonResponse({
-            "status": "Payment Verification Failed",
-            "error": str(e)
-        }, status=200)
     except Exception as e:
-        print(f"❌ Verify payment error: {e}")
         traceback.print_exc()
-        return JsonResponse({
-            "status": "Error",
-            "error": str(e)
-        }, status=200)
+        return JsonResponse({"status": "Error", "error": str(e)}, status=500)
+
 
 
 @csrf_exempt
