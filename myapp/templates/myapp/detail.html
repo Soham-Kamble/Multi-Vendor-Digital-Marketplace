@@ -112,17 +112,21 @@ document.getElementById('checkout-button')?.addEventListener('click', function(e
                 })
                 .then(res => res.json())
                 .then(resData => {
+                                        console.log('✅ verify_payment response:', resData);
                     if (resData.status && resData.status.toLowerCase().includes('verified')) {
-                        const razorId = resData.razorpay_order_id || resData.order_id || '';
-                        const q = razorId ? `?razorpay_order_id=${encodeURIComponent(razorId)}` : '';
+                        // Use order_id (the DB order ID) from verify_payment response
+                        const orderId = resData.order_id || '';
+                        const q = orderId ? `?order_id=${encodeURIComponent(orderId)}` : '';
+                                                console.log('✅ Payment verified, redirecting to success:', q);
                         window.location.href = "{% url 'success' %}" + q;
                     } else {
                         const msg = resData.error || 'Verification failed';
+                                                console.error('❌ Verification failed:', resData);
                         window.location.href = "{% url 'failed' %}?error=" + encodeURIComponent(msg);
                     }
                 })
                 .catch(err => {
-                    console.error('verify_payment error:', err);
+                    console.error('❌ verify_payment fetch error:', err);
                     window.location.href = "{% url 'failed' %}?error=" + encodeURIComponent('Verification error');
                 });
             }

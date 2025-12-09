@@ -3,7 +3,7 @@ from .models import Product, OrderDetail
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 import razorpay, json
-from django.http import JsonResponse, HttpResponseNotFound
+from django.http import JsonResponse, HttpResponseNotFound, FileResponse
 from .forms import ProductForm, UserRegistrationForm
 from django.db.models import Sum
 import datetime
@@ -45,20 +45,25 @@ def generate_receipt(order):
             img = ImageReader(BytesIO(resp.content))
             p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True)
         except Exception as e:
-            print("Product image error:", e)
+            print(f"⚠️ Product image error: {e}")
 
     p.showPage()
     p.save()
     buffer.seek(0)
 
     # 🔥 Correct: save ONLY to Cloudinary
-    order.receipt.save(
-        f"receipt_{order.id}.pdf",
-        ContentFile(buffer.read()),
-        save=True
-    )
-
-    buffer.close()
+    try:
+        order.receipt.save(
+            f"receipt_{order.id}.pdf",
+            ContentFile(buffer.read()),
+            save=True
+        )
+        print(f"✅ Receipt generated successfully for order {order.id}")
+    except Exception as e:
+        print(f"❌ Failed to save receipt for order {order.id}: {e}")
+        raise
+    finally:
+        buffer.close()
 
 
 def index(request):
@@ -143,7 +148,8 @@ def verify_payment(request):
                 generate_receipt(order)
             except Exception as e:
                 traceback.print_exc()
-                return JsonResponse({"status": "Receipt generation failed", "error": str(e)}, status=500)
+                print(f"⚠️ Receipt generation failed: {e}")
+                # Don't fail payment if receipt fails - customer still paid
 
 
         # ✅ RETURN ORDER ID so success page knows the exact order
@@ -151,23 +157,32 @@ def verify_payment(request):
             "status": "Payment Verified",
             "order_id": order.id,
             "razorpay_order_id": order.razor_payment_id,
-        })
+        }, status=200)
 
     except razorpay.errors.SignatureVerificationError as e:
-
-        # Mark order as FAILED
+        print(f"❌ Signature verification failed: {e}")
+        # Mark order as FAILED using razor_order_id from request (if available)
         try:
-            order = OrderDetail.objects.get(razor_payment_id=data.get('razorpay_order_id'))
-            order.status = "FAILED"
-            order.save()
-        except:
+            razor_order_id = data.get('razorpay_order_id')
+            if razor_order_id:
+                order = OrderDetail.objects.get(razor_order_id=razor_order_id)
+                order.status = "FAILED"
+                order.save()
+        except Exception:
             pass
 
         traceback.print_exc()
-        return JsonResponse({"status": "Payment Verification Failed", "error": str(e)}, status=400)
+        return JsonResponse({
+            "status": "Payment Verification Failed",
+            "error": str(e)
+        }, status=200)
     except Exception as e:
+        print(f"❌ Verify payment error: {e}")
         traceback.print_exc()
-        return JsonResponse({"status": "Error", "error": str(e)}, status=500)
+        return JsonResponse({
+            "status": "Error",
+            "error": str(e)
+        }, status=200)
 
 
 @csrf_exempt
@@ -186,9 +201,19 @@ def payment_success_view(request):
 
     # If redirected via GET with order id in query params, use that to find the order
     if not order:
-        get_order_id = request.GET.get('razorpay_order_id') or request.GET.get('order_id')
+        # Try both order_id (DB primary key) and razorpay_order_id
+        get_order_id = request.GET.get('order_id')
         if get_order_id:
-            order = OrderDetail.objects.filter(razor_payment_id=get_order_id).order_by('-created_on').first()
+            try:
+                order = OrderDetail.objects.get(id=int(get_order_id))
+            except (OrderDetail.DoesNotExist, ValueError):
+                pass
+        
+        # Fallback: try razorpay_order_id
+        if not order:
+            razorpay_id = request.GET.get('razorpay_order_id')
+            if razorpay_id:
+                order = OrderDetail.objects.filter(razor_payment_id=razorpay_id).order_by('-created_on').first()
 
     # Fallback: show most recent paid order for the logged-in user
     if not order:
@@ -307,6 +332,52 @@ def sales(request):
 
     return render(request,'myapp/sales.html',{'total_sales':total_sales,'yearly_sales':yearly_sales,'monthly_sales':monthly_sales,'weekly_sales':weekly_sales,'daily_sales_sums':daily_sales_sums,'product_sales_sums':product_sales_sums})
 
+
+@login_required
+def download_receipt(request, order_id):
+    """Download receipt PDF for a specific order"""
+    try:
+        order = OrderDetail.objects.get(id=order_id)
+        # Verify user owns this order (via email or user account)
+        if order.customer_email != request.user.email:
+            return HttpResponseNotFound("Order not found or access denied")
+        
+        if not order.receipt:
+            return HttpResponseNotFound("Receipt not generated yet")
+        
+        # Open the receipt file and return it
+        receipt_file = order.receipt.open('rb')
+        response = FileResponse(receipt_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="receipt_{order.id}.pdf"'
+        return response
+    except OrderDetail.DoesNotExist:
+        return HttpResponseNotFound("Order not found")
+    except Exception as e:
+        print(f"Receipt download error: {e}")
+        return HttpResponseNotFound("Could not download receipt")
+
+
+# Alternative: Direct URL redirect to Cloudinary
+@login_required
+def download_receipt_url(request, order_id):
+    """Get direct download URL for receipt PDF"""
+    try:
+        order = OrderDetail.objects.get(id=order_id)
+        # Verify user owns this order (via email or user account)
+        if order.customer_email != request.user.email:
+            return JsonResponse({"error": "Access denied"}, status=403)
+        
+        if not order.receipt:
+            return JsonResponse({"error": "Receipt not generated yet"}, status=404)
+        
+        # Return the Cloudinary URL
+        receipt_url = order.receipt.url
+        return JsonResponse({"url": receipt_url})
+    except OrderDetail.DoesNotExist:
+        return JsonResponse({"error": "Order not found"}, status=404)
+    except Exception as e:
+        print(f"Receipt URL error: {e}")
+        return JsonResponse({"error": "Could not get receipt URL"}, status=500)
 
 
 @csrf_exempt
