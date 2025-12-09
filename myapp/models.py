@@ -28,7 +28,6 @@ class OrderDetail(models.Model):
     customer_email = models.EmailField()
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     amount = models.IntegerField()
-    razor_payment_id = models.CharField(max_length=200)
     has_paid = models.BooleanField(default=False)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now_add=True)
@@ -41,4 +40,5 @@ class OrderDetail(models.Model):
     )
 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="PENDING")  
-    razor_order_id = models.CharField(max_length=200, null=True, blank=True)
+    razor_order_id = models.CharField(max_length=200)
+    razor_payment_id = models.CharField(max_length=200, null=True, blank=True)

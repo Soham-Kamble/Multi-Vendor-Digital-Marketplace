@@ -21,9 +21,6 @@ from django.contrib import messages
 from django.core.files.storage import default_storage
 import requests
 
-from django.core.files.storage import default_storage
-print(">>> ACTIVE STORAGE ON RENDER:", default_storage.__class__)
-
 
 def generate_receipt(order):
     buffer = BytesIO()
@@ -100,7 +97,7 @@ def create_checkout_session(request, id):
         order_detail = OrderDetail.objects.create(
             customer_email=data.get('email'),
             product=product,
-            razor_payment_id=order["id"],
+            razor_order_id = order["id"],
             amount=product.price,
             status="PENDING"
         )
@@ -128,8 +125,10 @@ def verify_payment(request):
         })
 
         # Mark order as PAID
-        order = get_object_or_404(OrderDetail, razor_payment_id=data['razorpay_order_id'])
+        order = get_object_or_404(OrderDetail, razor_order_id=data['razorpay_order_id'])
+        order.razor_payment_id = data['razorpay_payment_id']
         order.status = "PAID"
+        order.has_paid = True
         order.save()
 
         # Update product totals
