@@ -23,5 +23,4 @@ urlpatterns = [
     path('purchases/',views.my_purchases,name='purchases'),
     path('sales/',views.sales,name='sales'),
     path("payment-handler/", views.payment_handler, name="payment_handler"),
-    path('receipt/<int:order_id>/download/', views.download_receipt, name='download_receipt'),
 ]

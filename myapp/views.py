@@ -238,8 +238,13 @@ def invalid(request):
     return render(request,'myapp/invalid.html')
 
 def my_purchases(request):
-    orders = OrderDetail.objects.filter(customer_email=request.user.email, status="PAID")
+    orders = OrderDetail.objects.filter(
+        customer_email=request.user.email,
+        status="PAID"
+    ).order_by('-created_on')  # newest first
+
     return render(request,'myapp/purchases.html',{'orders':orders})
+
 
 def sales(request):
     orders = OrderDetail.objects.filter(product__seller=request.user)

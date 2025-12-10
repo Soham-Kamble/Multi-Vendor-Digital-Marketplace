@@ -9,7 +9,7 @@
       <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
         🛍️ My <span class="text-emerald-600">Purchases</span>
       </h1>
-      <p class="text-gray-500 text-sm sm:text-base">Here are the products you’ve bought</p>
+      <p class="text-gray-500 text-sm sm:text-base">Your most recent orders appear first</p>
     </div>
 
     <!-- Purchases Table -->
@@ -17,22 +17,22 @@
       <div class="overflow-x-auto">
 
         <!-- Table Header -->
-        <div class="hidden sm:grid grid-cols-4 bg-emerald-50 p-4 font-semibold text-emerald-700 rounded-t-2xl text-sm sm:text-base min-w-[700px] border-b border-emerald-100">
+        <div class="hidden sm:grid grid-cols-3 bg-emerald-50 p-4 font-semibold text-emerald-700 rounded-t-2xl text-sm sm:text-base min-w-[700px] border-b border-emerald-100">
           <div>Product</div>
           <div>Amount Paid</div>
-          <div>Order Date</div>
+          <div>Order Date & Time</div>
         </div>
 
         <!-- Table Body -->
         {% for order in orders %}
-        <div class="grid grid-cols-1 sm:grid-cols-4 border-b border-gray-100 hover:bg-gray-50 transition-colors p-4 items-center text-sm sm:text-base min-w-[700px]">
-          
+        <div class="grid grid-cols-1 sm:grid-cols-3 border-b border-gray-100 hover:bg-gray-50 transition-colors p-4 items-center text-sm sm:text-base min-w-[700px]">
+
           <!-- Product (Image + Name) -->
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
             {% if order.product.image %}
               <img src="{{ order.product.image.url }}" 
                    alt="{{ order.product.name }}" 
-                   class="w-16 h-16 object-cover rounded-lg border border-gray-200 shadow-sm">
+                   class="w-22 h-22 object-cover rounded-lg border border-gray-200 shadow-sm">
             {% else %}
               <div class="w-16 h-16 flex items-center justify-center bg-gray-100 text-gray-400 rounded-lg border border-gray-200">📦</div>
             {% endif %}
@@ -43,7 +43,12 @@
           <div class="text-green-600 font-semibold">${{ order.amount }}</div>
 
           <!-- Order Date -->
-          <div class="text-gray-600">{{ order.created_on|date:"M d, Y H:i" }}</div>
+          <div class="text-gray-700 font-medium">
+            {{ order.created_on|date:"M d, Y" }}  
+            <span class="block text-gray-500 text-xs">
+              {{ order.created_on|date:"h:i A" }}
+            </span>
+          </div>
 
         </div>
         {% empty %}
