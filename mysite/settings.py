@@ -4,8 +4,6 @@ import sys
 import dj_database_url
 from dotenv import load_dotenv
 
-print(">>> USING STORAGE:", DEFAULT_FILE_STORAGE)
-print(">>> CLOUDINARY:", CLOUDINARY_STORAGE)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

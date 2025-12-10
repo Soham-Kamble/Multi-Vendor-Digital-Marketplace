@@ -8,62 +8,12 @@ from .forms import ProductForm, UserRegistrationForm
 from django.db.models import Sum
 import datetime
 from django.contrib.auth.decorators import login_required
-from io import BytesIO
-from django.core.files.base import ContentFile
-from reportlab.pdfgen import canvas
-from django.utils import timezone
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import inch
-from reportlab.lib.utils import ImageReader
-from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.core.files.storage import default_storage
-import requests
 
 
-def generate_receipt(order):
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=(400, 600))
-
-    # Header + info
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(50, 550, "Purchase Receipt")
-
-    p.setFont("Helvetica", 12)
-    p.drawString(50, 520, f"Product: {order.product.name}")
-    p.drawString(50, 500, f"Price Paid: ${order.amount}")
-    p.drawString(50, 480, f"Purchased by: {order.customer_email}")
-    p.drawString(50, 440, f"Date: {order.created_on.strftime('%Y-%m-%d %H:%M')}")
-
-    # Add product image if available
-    if order.product.image:
-        try:
-            img_url = order.product.image.url
-            resp = requests.get(img_url)
-            resp.raise_for_status()
-            img = ImageReader(BytesIO(resp.content))
-            p.drawImage(img, 50, 250, width=300, height=150, preserveAspectRatio=True)
-        except Exception as e:
-            print(f"⚠️ Product image error: {e}")
-
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-
-    # 🔥 Correct: save ONLY to Cloudinary
-    try:
-        order.receipt.save(
-            f"receipt_{order.id}.pdf",
-            ContentFile(buffer.read()),
-            save=True
-        )
-        print(f"✅ Receipt generated successfully for order {order.id}")
-    except Exception as e:
-        print(f"❌ Failed to save receipt for order {order.id}: {e}")
-        raise
-    finally:
-        buffer.close()
 
 
 def index(request):
@@ -145,12 +95,6 @@ def verify_payment(request):
         product.save()
 
         # 5) generate receipt (if not present)
-        if not order.receipt:
-            try:
-                generate_receipt(order)
-            except Exception as e:
-                traceback.print_exc()
-                return JsonResponse({"status": "Receipt generation failed", "error": str(e)}, status=500)
 
         return JsonResponse({
             "status": "Payment Verified",

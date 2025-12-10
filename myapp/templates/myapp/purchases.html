@@ -21,7 +21,6 @@
           <div>Product</div>
           <div>Amount Paid</div>
           <div>Order Date</div>
-          <div>Receipt</div>
         </div>
 
         <!-- Table Body -->
@@ -45,20 +44,6 @@
 
           <!-- Order Date -->
           <div class="text-gray-600">{{ order.created_on|date:"M d, Y H:i" }}</div>
-
-          <!-- Download Button -->
-          <div>
-            {% if order.receipt %}
-              <a href="{{ order.receipt.url }}" download="receipt_{{ order.id }}.pdf"
-                 class="inline-block bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white px-4 py-1.5 rounded-md shadow-sm text-sm font-medium transition">
-                📥 Receipt
-              </a>
-            {% else %}
-              <span class="inline-block text-gray-400 text-xs px-2 py-1">
-                Generating...
-              </span>
-            {% endif %}
-          </div>
 
         </div>
         {% empty %}
