@@ -46,7 +46,11 @@
           <div class="text-gray-700 font-medium">
             {{ order.created_on|date:"M d, Y" }}  
             <span class="block text-gray-500 text-xs">
-              {{ order.created_on|date:"h:i A" }}
+              <div class="text-gray-600">
+                  {{ order.created_on|date:"M d, Y, h:i A" }} 
+                  <span class="text-xs text-gray-400">({{ order.created_on|timesince }} ago)</span>
+              </div>
+
             </span>
           </div>
 

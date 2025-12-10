@@ -4,6 +4,9 @@ import sys
 import dj_database_url
 from dotenv import load_dotenv
 
+TIME_ZONE = "Asia/Kolkata"
+USE_TZ = True  
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
