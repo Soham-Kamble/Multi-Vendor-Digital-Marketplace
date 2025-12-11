@@ -247,30 +247,41 @@ def my_purchases(request):
 
 
 def sales(request):
-    orders = OrderDetail.objects.filter(product__seller=request.user)
+
+    # ONLY include paid orders
+    orders = OrderDetail.objects.filter(
+        product__seller=request.user,
+        status="PAID"
+    )
+
     total_sales = orders.aggregate(Sum('amount'))
 
-    #365 Day Sales
     last_year = datetime.date.today() - datetime.timedelta(days=365)
-    data = OrderDetail.objects.filter(product__seller=request.user,created_on__gt = last_year)
-    yearly_sales = data.aggregate(Sum('amount'))
-    
-    #30 Day Sales
+    yearly_sales = orders.filter(created_on__gt=last_year).aggregate(Sum('amount'))
+
     last_month = datetime.date.today() - datetime.timedelta(days=30)
-    data = OrderDetail.objects.filter(product__seller=request.user,created_on__gt = last_month)
-    monthly_sales = data.aggregate(Sum('amount'))
-    
-    #7 Day Sales
+    monthly_sales = orders.filter(created_on__gt=last_month).aggregate(Sum('amount'))
+
     last_week = datetime.date.today() - datetime.timedelta(days=7)
-    data = OrderDetail.objects.filter(product__seller=request.user,created_on__gt = last_week)
-    weekly_sales = data.aggregate(Sum('amount'))
-    
-    daily_sales_sums = OrderDetail.objects.filter(product__seller=request.user).values('created_on__date').order_by('created_on__date').annotate(sum=Sum('amount'))
+    weekly_sales = orders.filter(created_on__gt=last_week).aggregate(Sum('amount'))
 
-    product_sales_sums = OrderDetail.objects.filter(product__seller=request.user).values('product__name').order_by('product__name').annotate(sum=Sum('amount'))
-    print(product_sales_sums)
+    daily_sales_sums = orders.values('created_on__date') \
+                             .order_by('created_on__date') \
+                             .annotate(sum=Sum('amount'))
 
-    return render(request,'myapp/sales.html',{'total_sales':total_sales,'yearly_sales':yearly_sales,'monthly_sales':monthly_sales,'weekly_sales':weekly_sales,'daily_sales_sums':daily_sales_sums,'product_sales_sums':product_sales_sums})
+    product_sales_sums = orders.values('product__name') \
+                               .order_by('product__name') \
+                               .annotate(sum=Sum('amount'))
+
+    return render(request, 'myapp/sales.html', {
+        'total_sales': total_sales,
+        'yearly_sales': yearly_sales,
+        'monthly_sales': monthly_sales,
+        'weekly_sales': weekly_sales,
+        'daily_sales_sums': daily_sales_sums,
+        'product_sales_sums': product_sales_sums
+    })
+
 
 
 @login_required
