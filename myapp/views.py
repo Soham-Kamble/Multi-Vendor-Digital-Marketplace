@@ -230,7 +230,8 @@ def register(request):
       new_user = user_form.save(commit=False)
       new_user.set_password(user_form.cleaned_data['password'])
       new_user.save()
-      return redirect('index')
+      messages.success(request, "Account created successfully! Please login.")
+      return redirect('login')
     user_form = UserRegistrationForm()
     return render(request,'myapp/register.html',{'user_form':user_form})
 
@@ -337,3 +338,6 @@ def payment_handler(request):
         return JsonResponse({"status": "success"})
     
     return JsonResponse({"status": "Invalid Request"}, status=400)
+
+
+    
