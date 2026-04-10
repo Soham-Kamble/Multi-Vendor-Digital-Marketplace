@@ -1,0 +1,80 @@
+POST http://127.0.0.1:8000/api/auth/register/
+Content-Type: application/json
+
+{ "username": "soham", "email": "soham@test.com", "password": "test1234" }
+
+###
+
+POST http://127.0.0.1:8000/api/auth/login/
+Content-Type: application/json
+
+{ "username": "user2", "password": "user2" }
+
+###
+
+POST http://127.0.0.1:8000/api/auth/logout/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1NzUwNjQ5LCJpYXQiOjE3NzU3NDk3NDksImp0aSI6IjlmZGNhOWMxYmFiYjQ4YWFhNGY2OGQ4NTZjNTNhNjJhIiwidXNlcl9pZCI6IjQifQ.L4-XaEpmKlpT-vewIVDfrt1QI3qhj6MapGNvZ9KB6sE
+Content-Type: application/json
+
+{
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NjM1NDU0OSwiaWF0IjoxNzc1NzQ5NzQ5LCJqdGkiOiJmMjg5Y2M0MGM3ZDE0OTk3YjI5ZGI2MWE1MzZiYTI1ZSIsInVzZXJfaWQiOiI0In0.lXLWC50-GWWozItUcDha4dzNhUdq0AawfTWMn0RBG0o"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/auth/refresh/
+Content-Type: application/json
+
+{ "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NjM1MzU1MCwiaWF0IjoxNzc1NzQ4NzUwLCJqdGkiOiI1M2E0YTZiZDkxYWQ0ZjEwYjMyMmYxODRlMmQwNDZlNSIsInVzZXJfaWQiOiI0In0.k-JEVZZEJetcL_GpYqMFuhUP2H6Uq4FZYPhhMiTdlo0" }
+
+###
+
+GET http://127.0.0.1:8000/api/dashboard/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1NzUxNTQzLCJpYXQiOjE3NzU3NTA2NDMsImp0aSI6IjVlNmVjNGE4ZDczNTRjNWU5ZWFjZjYzNjQ2MDlhMzNhIiwidXNlcl9pZCI6IjIifQ.nTJRxeCXlELpgg_8vi4BYXu7fO-ndWrMR39RCOszQnw
+###
+
+GET http://127.0.0.1:8000/api/dashboard/
+
+###
+
+GET http://127.0.0.1:8000/api/products/
+
+###
+
+GET http://127.0.0.1:8000/api/products/2/
+
+
+### Create product (needs token)
+POST http://127.0.0.1:8000/api/products/create/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1NzU2MzY1LCJpYXQiOjE3NzU3NTU0NjUsImp0aSI6Ijg2NDEyMGM2NjZhMzQ4NzdhN2QzY2RlOTEwZmE4ZGFmIiwidXNlcl9pZCI6IjIifQ.lLBNBymtrrYTf3wUy60YY_KpgaH2o0Iqg4K4mVC5iqw
+Content-Type: application/json
+
+{
+  "name": "Test Product",
+  "description": "This is a test",
+  "price": "299.00"
+}
+
+### Edit product (needs token, must be your product)
+PUT http://127.0.0.1:8000/api/products/7/edit/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1NzU2NDc3LCJpYXQiOjE3NzU3NTU1NzcsImp0aSI6IjVmODZkZTU0ZmZiZTQzNzFiM2RmOWM5ZDNiNDJiMTFhIiwidXNlcl9pZCI6IjIifQ.16J4QWrSgdDJOmgZqGFSuq0N6gwaAeOSa-Ir2fHjduw
+Content-Type: application/json
+
+{
+  "price": "199.00"
+}
+
+### Delete product (needs token, must be your product)
+DELETE http://127.0.0.1:8000/api/products/7/delete/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1NzU2NDc3LCJpYXQiOjE3NzU3NTU1NzcsImp0aSI6IjVmODZkZTU0ZmZiZTQzNzFiM2RmOWM5ZDNiNDJiMTFhIiwidXNlcl9pZCI6IjIifQ.16J4QWrSgdDJOmgZqGFSuq0N6gwaAeOSa-Ir2fHjduw
+
+### Try deleting someone else's product (should get 403)
+DELETE http://127.0.0.1:8000/api/products/2/delete/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1NzU2NDc3LCJpYXQiOjE3NzU3NTU1NzcsImp0aSI6IjVmODZkZTU0ZmZiZTQzNzFiM2RmOWM5ZDNiNDJiMTFhIiwidXNlcl9pZCI6IjIifQ.16J4QWrSgdDJOmgZqGFSuq0N6gwaAeOSa-Ir2fHjduw
+
+### My Purchases
+GET http://127.0.0.1:8000/api/purchases/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1ODA3MzUzLCJpYXQiOjE3NzU4MDY0NTQsImp0aSI6IjBhZTdlOGZjZWQzNzQ2N2Q5MjY1YzIyZmFjYTAyMzFmIiwidXNlcl9pZCI6IjIifQ.knKYuIklCOoeV-68YXr65379G7ZOkaIsZ5ciK7ZUEHM
+### Sales Analytics
+GET http://127.0.0.1:8000/api/sales/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc1ODA3MzUzLCJpYXQiOjE3NzU4MDY0NTQsImp0aSI6IjBhZTdlOGZjZWQzNzQ2N2Q5MjY1YzIyZmFjYTAyMzFmIiwidXNlcl9pZCI6IjIifQ.knKYuIklCOoeV-68YXr65379G7ZOkaIsZ5ciK7ZUEHM

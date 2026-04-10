@@ -13,8 +13,11 @@ from reportlab.lib.units import inch
 from django.core.paginator import Paginator
 from django.contrib import messages
 
-
-
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import permissions
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserRegistrationSerializer, ProductSerializer, ProductWriteSerializer, OrderDetailSerializer
 
 def index(request):
     products = Product.objects.all().order_by('-id')
@@ -340,4 +343,141 @@ def payment_handler(request):
     return JsonResponse({"status": "Invalid Request"}, status=400)
 
 
+
+# JWT Auth Views
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Account created successfully'}, status=201)
+        return Response(serializer.errors, status=400)
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({'message': 'Logged out successfully'})
+        except Exception:
+            return Response({'error': 'Invalid token'}, status=400)
+        
+class DashboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        products = Product.objects.filter(seller=request.user).order_by('-id')
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
     
+class ProductListView(APIView):
+    permission_classes = [permissions.AllowAny]  # public, no token needed
+
+    def get(self, request):
+        products = Product.objects.all().order_by('-id')
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
+
+
+class ProductDetailView(APIView):
+    permission_classes = [permissions.AllowAny]  # public, no token needed
+
+    def get(self, request, id):
+        product = get_object_or_404(Product, id=id)
+        serializer = ProductSerializer(product)
+        return Response(serializer.data)
+    
+class ProductCreateView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ProductWriteSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(seller=request.user)  # seller pulled from JWT, not request body
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+
+class ProductEditView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, id):
+        product = get_object_or_404(Product, id=id)
+        if product.seller != request.user:
+            return Response({'error': 'Not authorized'}, status=403)
+        serializer = ProductWriteSerializer(product, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+
+class ProductDeleteView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, id):
+        product = get_object_or_404(Product, id=id)
+        if product.seller != request.user:
+            return Response({'error': 'Not authorized'}, status=403)
+        name = product.name
+        product.delete()
+        return Response({'message': f'{name} deleted successfully'})
+    
+class MyPurchasesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        orders = OrderDetail.objects.filter(
+            customer_email=request.user.email,
+            status="PAID"
+        ).order_by('-created_on')
+        serializer = OrderDetailSerializer(orders, many=True)
+        return Response(serializer.data)
+
+
+class SalesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        orders = OrderDetail.objects.filter(
+            product__seller=request.user,
+            status="PAID"
+        )
+
+        total_sales = orders.aggregate(Sum('amount'))
+
+        last_year = datetime.date.today() - datetime.timedelta(days=365)
+        yearly_sales = orders.filter(created_on__gt=last_year).aggregate(Sum('amount'))
+
+        last_month = datetime.date.today() - datetime.timedelta(days=30)
+        monthly_sales = orders.filter(created_on__gt=last_month).aggregate(Sum('amount'))
+
+        last_week = datetime.date.today() - datetime.timedelta(days=7)
+        weekly_sales = orders.filter(created_on__gt=last_week).aggregate(Sum('amount'))
+
+        daily_sales_sums = list(
+            orders.values('created_on__date')
+            .order_by('created_on__date')
+            .annotate(sum=Sum('amount'))
+        )
+
+        product_sales_sums = list(
+            orders.values('product__name')
+            .order_by('product__name')
+            .annotate(sum=Sum('amount'))
+        )
+
+        return Response({
+            'total_sales': total_sales['amount__sum'],
+            'yearly_sales': yearly_sales['amount__sum'],
+            'monthly_sales': monthly_sales['amount__sum'],
+            'weekly_sales': weekly_sales['amount__sum'],
+            'daily_sales_sums': daily_sales_sums,
+            'product_sales_sums': product_sales_sums,
+        })

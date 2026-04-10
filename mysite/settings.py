@@ -3,6 +3,7 @@ import os
 import sys
 import dj_database_url
 from dotenv import load_dotenv
+from datetime import timedelta
 
 TIME_ZONE = "Asia/Kolkata"
 USE_TZ = True  
@@ -49,6 +50,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',  # enables logout blacklisting
 ]
 
 # ---------------------------
@@ -131,4 +134,20 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {"console": {"class": "logging.StreamHandler", "stream": sys.stdout}},
     "loggers": {"django": {"handlers": ["console"], "level": "ERROR"}},
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
