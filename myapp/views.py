@@ -21,7 +21,6 @@ from .serializers import UserRegistrationSerializer, ProductSerializer, ProductW
 
 from django.core.cache import cache
 from django.views.decorators.cache import cache_page
-import redis
 
 def index(request):
     products = Product.objects.all().order_by('-id')
