@@ -3,14 +3,14 @@
 
 <!-- Product Detail Section -->
 <section class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-6 flex justify-center items-start">
-  <div class="bg-white rounded-3xl shadow-lg p-8 max-w-5xl w-full grid md:grid-cols-2 gap-10 transition-all duration-300 hover:shadow-xl">
+  <div class="bg-white rounded-3xl shadow-lg p-8 max-w-5xl w-full grid md:grid-cols-2 gap-10">
 
     <!-- Product Image -->
     <div class="flex justify-center items-center">
       {% if product.image %}
         <img src="{{ product.image.url }}" 
              alt="{{ product.name }}" 
-             class="rounded-2xl shadow-md w-full object-cover max-h-[480px] transition-transform duration-500 hover:scale-[1.02]">
+             class="rounded-2xl shadow-md w-full object-cover max-h-[480px]">
       {% else %}
         <div class="flex items-center justify-center bg-gray-200 rounded-2xl w-full h-[480px] text-gray-500">
           No Image Available
@@ -21,8 +21,8 @@
     <!-- Product Info -->
     <div class="flex flex-col justify-center space-y-6">
       <div>
-        <h1 class="text-4xl font-extrabold text-gray-900 leading-tight mb-3">{{ product.name }}</h1>
-        <p class="text-gray-600 text-lg leading-relaxed mb-4 border-l-4 border-emerald-500 pl-4">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-3">{{ product.name }}</h1>
+        <p class="text-gray-600 text-lg mb-4 border-l-4 border-emerald-500 pl-4">
           {{ product.description }}
         </p>
         <p class="text-sm text-gray-500">
@@ -32,120 +32,110 @@
 
       <div class="flex items-center justify-between bg-emerald-50 rounded-xl px-6 py-4">
         <span class="text-3xl font-bold text-emerald-700">₹{{ product.price }}</span>
-        <span class="text-gray-500 font-medium text-sm">Inclusive of all taxes</span>
+        <span class="text-gray-500 text-sm">Inclusive of all taxes</span>
       </div>
 
-      <!-- Email input -->
       {% if request.user.is_authenticated %}
         <div>
-          <label for="checkout-email" class="block text-gray-700 font-medium mb-1">Your Email</label>
+          <label class="block text-gray-700 mb-1">Your Email</label>
           <input 
               type="email" 
               id="checkout-email" 
-              placeholder="Enter your email" 
-              class="border border-gray-300 rounded-lg p-3 w-full mb-5 focus:ring-2 focus:ring-emerald-400 outline-none transition"
+              class="border rounded-lg p-3 w-full mb-5"
               value="{{ request.user.email|default:'' }}" 
           />
 
-          <!-- Buy Button -->
           <button id="checkout-button" 
-                  class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 
-                         text-white px-6 py-3 rounded-lg font-semibold shadow-md transition duration-300 ease-in-out 
-                         hover:shadow-lg">
+                  class="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700">
             🛒 Buy Now
           </button>
         </div>
-
       {% else %}
-        <!-- Login Prompt -->
         <div class="text-center">
           <a href="{% url 'login' %}?next={{ request.path }}" 
-             class="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 
-                    text-white px-8 py-3 rounded-lg font-semibold shadow-md transition duration-300 ease-in-out">
+             class="bg-blue-600 text-white px-6 py-3 rounded-lg">
             Login to Purchase
           </a>
-          <p class="text-gray-500 text-sm mt-3">You must be logged in to complete your purchase.</p>
         </div>
       {% endif %}
     </div>
   </div>
 </section>
 
-<!-- Razorpay Checkout Script -->
+<!-- Razorpay -->
+ 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
 document.getElementById('checkout-button')?.addEventListener('click', function(e){
     e.preventDefault();
 
-    const emailInput = document.getElementById('checkout-email');
-    const email = emailInput.value.trim();
+    const email = document.getElementById('checkout-email').value.trim();
 
     if(!email){
-        alert('Please enter your email before purchasing.');
-        emailInput.focus();
+        alert("Enter email first");
         return;
     }
 
-    // Create order via Django backend
     fetch("{% url 'create_checkout_session' product.id %}", {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ email: email })
     })
     .then(res => res.json())
     .then(data => {
-        const options = {
-            key: "{{ razor_publishable_key }}",
-            amount: data.amount,
-            currency: "INR",
-            name: "{{ product.name }}",
-            description: "{{ product.description }}",
-            order_id: data.order_id,
-            prefill: { email: email },
-            theme: { color: "#10B981" },
-            handler: function (response) {
-                fetch("{% url 'verify_payment' %}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(response)
-                })
-                .then(res => res.json())
-                .then(resData => {
-                                        console.log('✅ verify_payment response:', resData);
-                    if (resData.status && resData.status.toLowerCase().includes('verified')) {
-                        // Use order_id (the DB order ID) from verify_payment response
-                        const orderId = resData.order_id || '';
-                        const q = orderId ? `?order_id=${encodeURIComponent(orderId)}` : '';
-                                                console.log('✅ Payment verified, redirecting to success:', q);
-                        window.location.href = "{% url 'success' %}" + q;
-                    } else {
-                        const msg = resData.error || 'Verification failed';
-                                                console.error('❌ Verification failed:', resData);
-                        window.location.href = "{% url 'failed' %}?error=" + encodeURIComponent(msg);
-                    }
-                })
-                .catch(err => {
-                    console.error('❌ verify_payment fetch error:', err);
-                    window.location.href = "{% url 'failed' %}?error=" + encodeURIComponent('Verification error');
-                });
+
+const options = {
+    key: "{{ razor_publishable_key }}",
+    amount: data.amount,
+    currency: "INR",
+    name: "{{ product.name }}",
+    order_id: data.order_id,
+    prefill: { email: email },
+    theme: { color: "#10B981" },
+
+    // Force UPI collect (manual ID) on desktop too
+    config: {
+        display: {
+            blocks: {
+                upi: {
+                    name: "Pay via UPI",
+                    instruments: [
+                        { method: "upi", flows: ["collect"] }
+                    ]
+                }
+            },
+            sequence: ["block.upi"],
+            preferences: { show_default_blocks: true }
+        }
+    },
+
+    handler: function (response) {
+        fetch("{% url 'verify_payment' %}", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(response)
+        })
+        .then(res => res.json())
+        .then(resData => {
+            if (resData.status && resData.status.toLowerCase().includes('verified')) {
+                window.location.href = "{% url 'success' %}";
+            } else {
+                window.location.href = "{% url 'failed' %}";
             }
-        };
+        });
+    }
+};
 
         const rzp = new Razorpay(options);
 
-        // Handle payment failure
         rzp.on("payment.failed", function (response) {
-            const desc = (response && response.error && response.error.description) ? response.error.description : 'Payment failed';
-            window.location.href = "{% url 'failed' %}?error=" + encodeURIComponent(desc);
+            alert(response.error.description || "Payment failed");
         });
 
         rzp.open();
-    })
-    .catch(err => {
-        console.error("Checkout error:", err);
-        alert("Could not initiate payment. Please try again later.");
     });
 });
 </script>
+
 {% endblock %}

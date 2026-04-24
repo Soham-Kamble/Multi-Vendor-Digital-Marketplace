@@ -19,6 +19,10 @@ from rest_framework import permissions
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserRegistrationSerializer, ProductSerializer, ProductWriteSerializer, OrderDetailSerializer
 
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+import redis
+
 def index(request):
     products = Product.objects.all().order_by('-id')
 
@@ -48,7 +52,7 @@ def create_checkout_session(request, id):
         order = client.order.create({
             "amount": int(product.price * 100),  # paise
             "currency": "INR",
-            "payment_capture": "1"
+            "payment_capture": 1
         })
 
         # Save order in DB with pending status
@@ -63,6 +67,7 @@ def create_checkout_session(request, id):
         return JsonResponse({
             "order_id": order["id"],
             "amount": order["amount"],
+            "currency": order["currency"],
             "callback_url": request.build_absolute_uri(reverse("payment_handler"))
         })
 
@@ -338,13 +343,47 @@ def download_receipt_url(request, order_id):
 @csrf_exempt
 def payment_handler(request):
     if request.method == "POST":
-        return JsonResponse({"status": "success"})
-    
+        try:
+            payment_id = request.POST.get('razorpay_payment_id', '')
+            order_id   = request.POST.get('razorpay_order_id', '')
+            signature  = request.POST.get('razorpay_signature', '')
+
+            client = razorpay.Client(auth=(settings.RAZOR_KEY_ID, settings.RAZOR_SECRET_KEY))
+
+            # Verify signature
+            client.utility.verify_payment_signature({
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            })
+
+            # Update order in DB
+            order = OrderDetail.objects.filter(razor_order_id=order_id).first()
+            if order:
+                order.razor_payment_id = payment_id
+                order.status = "PAID"
+                order.has_paid = True
+                order.save()
+
+                product = order.product
+                product.total_sales_amount += int(order.amount)
+                product.total_sales += 1
+                product.save()
+
+            # ✅ Redirect (not JSON) — UPI expects this
+            return redirect(f'/payment-success/?order_id={order.id}')
+
+        except razorpay.errors.SignatureVerificationError:
+            return redirect('/payment-failed/?error=Signature verification failed')
+        except Exception as e:
+            return redirect(f'/payment-failed/?error={str(e)}')
+
     return JsonResponse({"status": "Invalid Request"}, status=400)
 
 
 
 # JWT Auth Views
+
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -380,7 +419,8 @@ class ProductListView(APIView):
     permission_classes = [permissions.AllowAny]  # public, no token needed
 
     def get(self, request):
-        products = Product.objects.all().order_by('-id')
+        products = Product.cache.get('product_list')
+        
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
 
